@@ -42,6 +42,7 @@ func main() {
 	if err := db.Ping(); err != nil {
 		panic(err)
 	}
+	reexp.InitDBConn(db)
 	log.Print("👍 connected to db server successfully.")
 
 	if flag.NArg() > 0 {
@@ -49,12 +50,12 @@ func main() {
 			arg := os.Args[1+2*flag.NFlag()+i]
 			if arg == "randClients" {
 				log.Print("📀 generating random Clients ...")
-				reexp.GRandomClients(db, 20)
+				reexp.GRandomClients(20)
 				log.Print("👍 done.")
 			}
 			if arg == "randFunds" {
 				log.Print("📀 generating random Funds ...")
-				reexp.GRandomFunds(db, 10)
+				reexp.GRandomFunds(10)
 				log.Print("👍 done.")
 			}
 		}
@@ -64,7 +65,7 @@ func main() {
 	h.HandleFunc("GET /alive", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "{%q: 0}", "status") })
 
 	log.Printf("📀 starting on %d ...", port)
-	if err := http.ListenAndServe(":"+strconv.Itoa(port), reexp.AppEPoints(h, db)); err != nil {
+	if err := http.ListenAndServe(":"+strconv.Itoa(port), reexp.AppEPoints(h)); err != nil {
 		panic(err)
 	}
 }

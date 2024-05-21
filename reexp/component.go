@@ -11,6 +11,14 @@ import (
 	"time"
 )
 
+var (
+	db *sql.DB
+)
+
+func InitDBConn(o *sql.DB) {
+	db = o
+}
+
 type Client struct {
 	Id   int       `json:"id"`
 	DOB  time.Time `json:"dob"`
@@ -40,7 +48,7 @@ type CFP struct {
 	Portfolio int `json:"portfolio"`
 }
 
-func queryClient(db *sql.DB, id int) (*Client, error) {
+func queryClient(id int) (*Client, error) {
 	var o Client
 	row := db.QueryRow("SELECT * FROM client WHERE id=?", id)
 	if err := row.Scan(&o.Id, &o.DOB, &o.Name, &o.NI); err != nil {
@@ -49,7 +57,7 @@ func queryClient(db *sql.DB, id int) (*Client, error) {
 	return &o, nil
 }
 
-func queryFund(db *sql.DB, id int) (*Fund, error) {
+func queryFund(id int) (*Fund, error) {
 	var o Fund
 	row := db.QueryRow("SELECT * FROM fund WHERE id=?", id)
 	if err := row.Scan(&o.Id, &o.Name, &o.Sector, &o.Type); err != nil {
@@ -58,12 +66,12 @@ func queryFund(db *sql.DB, id int) (*Fund, error) {
 	return &o, nil
 }
 
-func NewPortfolio(db *sql.DB, rNew RNewPortfolio) error {
-	client, err := queryClient(db, rNew.Client)
+func NewPortfolio(rNew RNewPortfolio) error {
+	client, err := queryClient(rNew.Client)
 	if err != nil {
 		return err
 	}
-	fund, err := queryFund(db, rNew.Fund)
+	fund, err := queryFund(rNew.Fund)
 	if err != nil {
 		return err
 	}
@@ -104,7 +112,7 @@ func NewPortfolio(db *sql.DB, rNew RNewPortfolio) error {
 	return nil
 }
 
-func GRandomClients(db *sql.DB, N int) {
+func GRandomClients(N int) {
 	t := []string{"Mr.", "Miss.", "Mrs.", "Dr.", "Sir", "Dame", "Prof."}
 	f := []string{"Doe", "Smith", "Lee", "Kubrik", "Jupiter", "Spark", "Discovery"}
 
@@ -124,7 +132,7 @@ func GRandomClients(db *sql.DB, N int) {
 	}
 }
 
-func GRandomFunds(db *sql.DB, N int) {
+func GRandomFunds(N int) {
 	n := []string{"General", "Dynamic", "Stable"}
 	t := []string{"Sustainable", "General"}
 	s := []string{"Technology", "Stocks", "Government", "Construction", "Health"}
@@ -142,7 +150,7 @@ func GRandomFunds(db *sql.DB, N int) {
 	}
 }
 
-func lsClients(db *sql.DB, w io.Writer) error {
+func lsClients(w io.Writer) error {
 	rows, err := db.Query("SELECT * FROM client") // LIMIT?
 	if err != nil {
 		return err
@@ -176,7 +184,7 @@ func writeJson(w io.Writer) *json.Encoder {
 	return encoder
 }
 
-func lsFunds(db *sql.DB, w io.Writer) error {
+func lsFunds(w io.Writer) error {
 	rows, _ := db.Query("SELECT id,name,sector,type FROM fund") // LIMIT?
 	defer rows.Close()
 
@@ -191,7 +199,7 @@ func lsFunds(db *sql.DB, w io.Writer) error {
 	return nil
 }
 
-func findPortfolio(db *sql.DB, w io.Writer, clientId int) error {
+func findPortfolio(w io.Writer, clientId int) error {
 	var o Portfolio
 	row := db.QueryRow(`
       SELECT p.*,f.id FROM client c 
@@ -207,8 +215,8 @@ func findPortfolio(db *sql.DB, w io.Writer, clientId int) error {
 	return nil
 }
 
-func findClient(db *sql.DB, w io.Writer, id int) error {
-	o, err := queryClient(db, id)
+func findClient(w io.Writer, id int) error {
+	o, err := queryClient(id)
 	if err != nil {
 		return err
 	}
@@ -216,8 +224,8 @@ func findClient(db *sql.DB, w io.Writer, id int) error {
 	return nil
 }
 
-func findFund(db *sql.DB, w io.Writer, id int) error {
-	o, err := queryFund(db, id)
+func findFund(w io.Writer, id int) error {
+	o, err := queryFund(id)
 	if err != nil {
 		return err
 	}

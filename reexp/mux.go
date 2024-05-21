@@ -1,7 +1,6 @@
 package reexp
 
 import (
-	"database/sql"
 	"encoding/json"
 	"io"
 	"log"
@@ -17,7 +16,7 @@ type RNewPortfolio struct {
 	Name   string `json:"name"`
 }
 
-func AppEPoints(m *http.ServeMux, db *sql.DB) http.Handler {
+func AppEPoints(m *http.ServeMux) http.Handler {
 	c := make(chan int)
 	go func(i int) {
 		for {
@@ -31,7 +30,6 @@ func AppEPoints(m *http.ServeMux, db *sql.DB) http.Handler {
 		XHeader: "X-RE-EXP",
 		m:       m,
 		chanId:  c,
-		db:      db,
 	}
 
 	type RWr = http.ResponseWriter
@@ -62,7 +60,7 @@ func AppEPoints(m *http.ServeMux, db *sql.DB) http.Handler {
 			return
 		}
 
-		if err := NewPortfolio(db, rNew); err != nil {
+		if err := NewPortfolio(rNew); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
@@ -70,9 +68,9 @@ func AppEPoints(m *http.ServeMux, db *sql.DB) http.Handler {
 		w.WriteHeader(http.StatusCreated)
 	})
 
-	m.HandleFunc("GET /fund", func(w RWr, r *RQ) { lsFunds(db, w) })
+	m.HandleFunc("GET /fund", func(w RWr, r *RQ) { lsFunds(w) })
 
-	m.HandleFunc("GET /client", func(w RWr, r *RQ) { lsClients(db, w) })
+	m.HandleFunc("GET /client", func(w RWr, r *RQ) { lsClients(w) })
 
 	m.HandleFunc("GET /client/{id}/portfolio", func(w RWr, r *RQ) {
 		clientId, err := strconv.Atoi(r.PathValue("id"))
@@ -80,7 +78,7 @@ func AppEPoints(m *http.ServeMux, db *sql.DB) http.Handler {
 			w.WriteHeader(404)
 			return
 		}
-		if err := findPortfolio(db, w, clientId); err != nil {
+		if err := findPortfolio(w, clientId); err != nil {
 			w.WriteHeader(404)
 		}
 	})
@@ -91,7 +89,7 @@ func AppEPoints(m *http.ServeMux, db *sql.DB) http.Handler {
 			w.WriteHeader(404)
 			return
 		}
-		if err := findClient(db, w, id); err != nil {
+		if err := findClient(w, id); err != nil {
 			w.WriteHeader(404)
 		}
 	})
@@ -102,7 +100,7 @@ func AppEPoints(m *http.ServeMux, db *sql.DB) http.Handler {
 			w.WriteHeader(404)
 			return
 		}
-		if err := findFund(db, w, id); err != nil {
+		if err := findFund(w, id); err != nil {
 			w.WriteHeader(404)
 		}
 	})
@@ -115,7 +113,6 @@ type ReExp struct {
 	XHeader string
 	m       *http.ServeMux
 	chanId  chan int
-	db      *sql.DB
 }
 
 func (o *ReExp) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -15,6 +15,7 @@
   - Main/CLI
   - Mux/API endpoints :: for easy addition/modification of endpoints with a clear demarcation from the database access context.
   - DB operations :: only an io.Writer is passed to database components to serialise the data as JSON.
+- to keep the data access context agnostic from RDBMS, all quries are only based on SQL standard (SQL:2011) and not therefor using any RDBMS specific extensions.
 
 ## Assumptions
 
