@@ -38,7 +38,7 @@ func AppEPoints(m *http.ServeMux) http.Handler {
 	m.HandleFunc("POST /client/{id}/portfolio", func(w RWr, r *RQ) {
 		clientId, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			w.WriteHeader(http.StatusNotFound)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
@@ -75,33 +75,33 @@ func AppEPoints(m *http.ServeMux) http.Handler {
 	m.HandleFunc("GET /client/{id}/portfolio", func(w RWr, r *RQ) {
 		clientId, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		if err := findPortfolio(w, clientId); err != nil {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 		}
 	})
 
 	m.HandleFunc("GET /client/{id}", func(w RWr, r *RQ) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		if err := findClient(w, id); err != nil {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 		}
 	})
 
 	m.HandleFunc("GET /fund/{id}", func(w RWr, r *RQ) {
 		id, err := strconv.Atoi(r.PathValue("id"))
 		if err != nil {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 		if err := findFund(w, id); err != nil {
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 		}
 	})
 
