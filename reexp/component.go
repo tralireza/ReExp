@@ -108,8 +108,7 @@ func NewPortfolio(rNew RNewPortfolio) error {
 		return err
 	}
 
-	tx.Commit()
-	return nil
+	return tx.Commit()
 }
 
 func GRandomClients(N int) {
