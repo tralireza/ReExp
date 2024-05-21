@@ -1,0 +1,27 @@
+graph ER {
+  node [fontsize=11]
+  edge [fontsize=11]
+
+  node [shape=box]; Client; Fund; Portfolio;
+  node [shape=ellipse]; {node [label="name"] name0; name1; name2;} 
+    NI; type; sector; state; amount; openedAt; dob; sector;
+  node [shape=diamond,style=filled,color=lightgrey]; "C-F-P";
+
+  subgraph cluster1 {
+    { name1; type; sector; } -- Fund
+
+    label = "Existing System (Employer)";
+    color = "#ff000080"
+    style = "filled";
+  }
+  Fund -- "C-F-P" [label="1"];
+  "C-F-P" -- Client [label="1"];
+  "C-F-P" -- Portfolio [label="1"];
+  
+  name0 -- Client -- { NI; dob };
+  amount -- Portfolio -- name2;
+  state -- Portfolio -- openedAt;
+
+  label = "\nClient Portfolio";
+  fontsize=17;
+}

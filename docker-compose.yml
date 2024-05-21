@@ -1,0 +1,16 @@
+services:
+  db:
+    image: mysql
+    environment:
+      MYSQL_DATABASE: reexp
+      MYSQL_USER: reexp
+      MYSQL_PASSWORD: mysql
+      MYSQL_ROOT_PASSWORD: mysql
+    ports:
+      - 3306:3306
+    expose:
+      - 3306
+    volumes:
+      - type: bind
+        source: ./initdb
+        target: /docker-entrypoint-initdb.d
