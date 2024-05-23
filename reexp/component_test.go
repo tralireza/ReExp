@@ -2,14 +2,52 @@ package reexp
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/json"
+	"fmt"
 	"log"
+	"math/rand"
 	"strings"
 	"testing"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 func init() {
 	log.SetFlags(0)
+}
+
+func TestNewPortfolioMy(t *testing.T) {
+	params := map[string]string{}
+	params["parseTime"] = "true"
+	db, err := sql.Open("mysql", (&mysql.Config{Params: params, User: "reexp", Passwd: "mysql", DBName: "reexp"}).FormatDSN())
+	if err != nil {
+		t.Fail()
+	}
+	defer db.Close()
+
+	mkr := fmt.Sprintf("%06d", rand.Intn(1000000))
+	var clientId, fundId int64
+	if r, err := db.Exec("INSERT INTO client (dob,name,ni) VALUES(?,?,?)", "2001-01-01", "tstClient"+mkr, "--"+mkr+"-"); err != nil {
+		t.Error(err)
+	} else {
+		clientId, _ = r.LastInsertId()
+	}
+	if r, err := db.Exec("INSERT INTO fund (name,sector,type) VALUES(?,?,?)", "tstFund"+mkr, "tstSector"+mkr, "tstType"+mkr); err != nil {
+		t.Error(err)
+	} else {
+		fundId, _ = r.LastInsertId()
+	}
+	log.Printf(" -> {Client: %d, Fund: %d}", clientId, fundId)
+
+	rNew := RNewPortfolio{Client: int(clientId), Fund: int(fundId), Amount: 10000}
+	InitDBConn(db, false)
+	if err := NewPortfolio(rNew); err != nil {
+		t.Error(err)
+	}
+	if err := NewPortfolio(rNew); err == nil {
+		t.Error("duplicate Portfolio for client was accepted")
+	}
 }
 
 func TestPGMarker(t *testing.T) {

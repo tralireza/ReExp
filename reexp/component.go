@@ -107,17 +107,27 @@ func NewPortfolio(rNew RNewPortfolio) error {
 	if rNew.Name == "" {
 		rNew.Name = client.Name + " :: " + fund.Name
 	}
-	r, err := db.Exec(pgMarker("INSERT INTO portfolio(amount,state,name) VALUES(?,0,?)"), rNew.Amount, rNew.Name)
-	if err != nil {
-		tx.Rollback()
-		return err
+	var portfolioId int64
+	if isPg {
+		err := tx.QueryRow("INSERT INTO portfolio(amount,state,name) VALUES($1,0,$2) RETURNING id", rNew.Amount, rNew.Name).Scan(&portfolioId)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	} else {
+		r, err := tx.Exec("INSERT INTO portfolio(amount,state,name) VALUES(?,0,?)", rNew.Amount, rNew.Name)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		insertId, err := r.LastInsertId()
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+		portfolioId = insertId
 	}
-	portfolioId, err := r.LastInsertId()
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-	if _, err := db.Exec(pgMarker("INSERT INTO cfp(client,fund,portfolio) VALUES(?,?,?)"), client.Id, fund.Id, portfolioId); err != nil {
+	if _, err := tx.Exec(pgMarker("INSERT INTO cfp(client,fund,portfolio) VALUES(?,?,?)"), client.Id, fund.Id, portfolioId); err != nil {
 		tx.Rollback()
 		return err
 	}
