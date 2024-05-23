@@ -27,7 +27,7 @@ SET default_table_access_method = heap;
 --
 
 CREATE TABLE public.cfp (
-    clinet integer NOT NULL,
+    client integer NOT NULL,
     fund integer NOT NULL,
     portfolio integer NOT NULL
 );
@@ -177,7 +177,7 @@ ALTER TABLE ONLY public.portfolio ALTER COLUMN id SET DEFAULT nextval('public.po
 --
 
 ALTER TABLE ONLY public.cfp
-    ADD CONSTRAINT cfp_pkey PRIMARY KEY (clinet);
+    ADD CONSTRAINT cfp_pkey PRIMARY KEY (client);
 
 
 --
