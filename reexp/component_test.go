@@ -12,6 +12,16 @@ func init() {
 	log.SetFlags(0)
 }
 
+func TestPGMarker(t *testing.T) {
+	isPg = true
+	if pgMarker("..WHERE id=?") != "..WHERE id=$1" {
+		t.Fail()
+	}
+	if pgMarker("..WHERE id=? AND fk=? ORDER..") != "..WHERE id=$1 AND fk=$2 ORDER.." {
+		t.Fail()
+	}
+}
+
 func TestComponent(t *testing.T) {
 	Comp := []any{Client{}, Fund{}, Portfolio{}, CFP{}}
 	Val := []string{

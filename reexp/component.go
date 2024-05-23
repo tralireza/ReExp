@@ -8,15 +8,29 @@ import (
 	"io"
 	"log"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 )
 
 var (
-	db *sql.DB
+	db   *sql.DB
+	isPg bool
 )
 
-func InitDBConn(o *sql.DB) {
-	db = o
+func InitDBConn(o *sql.DB, v bool) {
+	db, isPg = o, v
+}
+
+func pgMarker(qry string) string {
+	if isPg {
+		Qry := strings.Split(qry, "?")
+		qry = Qry[0]
+		for i, q := range Qry[1:] {
+			qry += "$" + strconv.Itoa(i+1) + q
+		}
+	}
+	return qry
 }
 
 type Client struct {
@@ -50,7 +64,7 @@ type CFP struct {
 
 func queryClient(id int) (*Client, error) {
 	var o Client
-	row := db.QueryRow("SELECT * FROM client WHERE id=?", id)
+	row := db.QueryRow(pgMarker("SELECT * FROM client WHERE id=?"), id)
 	if err := row.Scan(&o.Id, &o.DOB, &o.Name, &o.NI); err != nil {
 		return nil, err
 	}
@@ -59,7 +73,7 @@ func queryClient(id int) (*Client, error) {
 
 func queryFund(id int) (*Fund, error) {
 	var o Fund
-	row := db.QueryRow("SELECT * FROM fund WHERE id=?", id)
+	row := db.QueryRow(pgMarker("SELECT * FROM fund WHERE id=?"), id)
 	if err := row.Scan(&o.Id, &o.Name, &o.Sector, &o.Type); err != nil {
 		return nil, err
 	}
@@ -77,7 +91,7 @@ func NewPortfolio(rNew RNewPortfolio) error {
 	}
 
 	var o CFP
-	row := db.QueryRow("SELECT * FROM cfp WHERE client=?", client.Id)
+	row := db.QueryRow(pgMarker("SELECT * FROM cfp WHERE client=?"), client.Id)
 	if err := row.Scan(&o.Client, &o.Fund, &o.Portfolio); err != sql.ErrNoRows {
 		if err != nil {
 			return err
@@ -93,7 +107,7 @@ func NewPortfolio(rNew RNewPortfolio) error {
 	if rNew.Name == "" {
 		rNew.Name = client.Name + " :: " + fund.Name
 	}
-	r, err := db.Exec("INSERT INTO portfolio(amount,state,name) VALUES(?,0,?)", rNew.Amount, rNew.Name)
+	r, err := db.Exec(pgMarker("INSERT INTO portfolio(amount,state,name) VALUES(?,0,?)"), rNew.Amount, rNew.Name)
 	if err != nil {
 		tx.Rollback()
 		return err
@@ -103,7 +117,7 @@ func NewPortfolio(rNew RNewPortfolio) error {
 		tx.Rollback()
 		return err
 	}
-	if _, err := db.Exec("INSERT INTO cfp(client,fund,portfolio) VALUES(?,?,?)", client.Id, fund.Id, portfolioId); err != nil {
+	if _, err := db.Exec(pgMarker("INSERT INTO cfp(client,fund,portfolio) VALUES(?,?,?)"), client.Id, fund.Id, portfolioId); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -124,7 +138,7 @@ func GRandomClients(N int) {
 			DOB:  time.Now(),
 			NI:   fmt.Sprintf("%s%s%d%d%d%d%d%d%s", rndR(), rndR(), rndN(), rndN(), rndN(), rndN(), rndN(), rndN(), rndR()),
 		}
-		r, _ := db.Exec("INSERT INTO client(name,dob,ni) VALUES(?,?,?)", c.Name, c.DOB, c.NI)
+		r, _ := db.Exec(pgMarker("INSERT INTO client(name,dob,ni) VALUES(?,?,?)"), c.Name, c.DOB, c.NI)
 		Id, _ := r.LastInsertId()
 		c.Id = int(Id)
 		log.Printf("👍 -> %+v", c)
@@ -142,7 +156,7 @@ func GRandomFunds(N int) {
 			Type:   t[rand.Intn(len(t))],
 			Sector: s[rand.Intn(len(s))],
 		}
-		r, _ := db.Exec("INSERT INTO fund(name,sector,type) VALUES(?,?,?)", f.Name, f.Sector, f.Type)
+		r, _ := db.Exec(pgMarker("INSERT INTO fund(name,sector,type) VALUES(?,?,?)"), f.Name, f.Sector, f.Type)
 		Id, _ := r.LastInsertId()
 		f.Id = int(Id)
 		log.Printf("👍 -> %+v", f)
@@ -200,12 +214,12 @@ func lsFunds(w io.Writer) error {
 
 func findPortfolio(w io.Writer, clientId int) error {
 	var o Portfolio
-	row := db.QueryRow(`
-      SELECT p.*,f.id FROM client c 
-        JOIN cfp ON c.id=cfp.client 
-        JOIN portfolio p ON p.id=cfp.portfolio 
-        JOIN fund f ON f.id=cfp.fund 
-      WHERE c.id=?`, clientId)
+	row := db.QueryRow(pgMarker(`
+      SELECT p.*,f.id FROM client c
+        JOIN cfp ON c.id=cfp.client
+        JOIN portfolio p ON p.id=cfp.portfolio
+        JOIN fund f ON f.id=cfp.fund
+      WHERE c.id=?`), clientId)
 	if err := row.Scan(&o.Id, &o.Amount, &o.Name, &o.OpenedAt, &o.State, &o.Fund); err != nil {
 		return err
 	}

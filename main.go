@@ -54,7 +54,7 @@ func main() {
 		panic(err)
 	}
 
-	reexp.InitDBConn(db)
+	reexp.InitDBConn(db, isPg)
 	log.Print("👍 connected to db server successfully.")
 
 	if randClients {
