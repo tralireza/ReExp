@@ -1,0 +1,2 @@
+CREATE USER reexp PASSWORD 'pg';
+CREATE DATABASE reexp OWNER reexp;

@@ -1,5 +1,6 @@
 services:
-  db:
+
+  mysql:
     image: mysql
     environment:
       MYSQL_DATABASE: reexp
@@ -12,5 +13,20 @@ services:
       - 3306
     volumes:
       - type: bind
-        source: ./initdb
+        source: ./initdb/mysql
         target: /docker-entrypoint-initdb.d
+
+  postgres:
+    image: postgres
+    shm_size: 128MB
+    ports:
+      - 5432:5432
+    expose:
+      - 5432
+    environment:
+      POSTGRES_PASSWORD: pg
+    volumes:
+      - type: bind
+        source: ./initdb/postgres
+        target: /docker-entrypoint-initdb.d
+

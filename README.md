@@ -16,6 +16,8 @@
   - Mux/API endpoints :: for easy addition/modification of endpoints with a clear demarcation from the database access context.
   - DB operations :: only an io.Writer is passed to database components to serialise the data as JSON.
 - to keep the data access context agnostic from RDBMS, all queries are only based on SQL standard (SQL:2011) and not therefore using any RDBMS specific extensions.
+- Zero Copy :: GET /client is demonstrating a zero-copy data transfer from DB driver directly to web server response, which mean the Mux context won't require more memory to store objects returned. Since this scenario is primarily focusing on objects than collections, all other end-points just read one object '{}' at a time and won't need the arrangement.
+  - GET /fund :: will respond with a collection '[]' however no zero-copy was implemented, since it is not the main operation use.
 
 ## Assumptions
 
@@ -37,6 +39,7 @@
 
 - MySQL driver :: github.com/go-sql-driver/mysql
   - (indirect) filippo.io/edwards25519
+- Postgres driver :: github.com/lib/pq
 
 ## Web API: EndPoints
 
@@ -45,8 +48,7 @@ Input/Output format (ie: "Content-Type") is JSON.
 - GET /client :: list of all clients (no limits)
   - GET /client/{id} :: details for Client
   - GET /client/{id}/portfolio :: existing Portfolio for the client if any (only one or none)
-  - POST /client/{id}/porrtfolio :: POST {"fund":\<id:int\>,"amount":\<amount:int\>[,"name":"\<name:string\>"]} :: will create an entry for the client of the fund with the amount provided. Name of portfolio if provided is used otherwise defaults to: "Client.Name :: Fund.Name".
-
+  - POST /client/{id}/portfolio :: POST {"fund":\<id:int\>,"amount":\<amount:int\>[,"name":"\<name:string\>"]} :: will create an entry for the client of the fund with the amount provided. Name of portfolio if provided is used otherwise defaults to: "Client.Name :: Fund.Name".
 - GET /fund :: list of all funds (no limits)
   - GET /fund/{id} :: details for Fund
 
@@ -66,9 +68,15 @@ $ go build .
 $ ./main -h
 Usage of ./main:
   -dbport int
-        MySQL Port (default 3306)
+        DB Port, 0 (auto) -> {MySQL: 3306, Postgres: 5432}
+  -pg
+        Use Postgres as DB Server
   -port int
         HTTP Port (default 8080)
+  -randClients
+        Generate 20 random client records
+  -randFunds
+        Generate 10 random fund records
 ```
 
 *Also there are two commands:*
@@ -79,7 +87,7 @@ Usage of ./main:
 They could generate dummy data as follows if need be:
 
 ```bash
-$ ./main randFunds
+$ ./main --randFunds
 2024/05/21 03:52:09 👍 connected to db server successfully.
 2024/05/21 03:52:09 📀 generating random Funds ...
 2024/05/21 03:52:09 👍 -> {Id:41 Name:Dynamic Sector:Government Type:Sustainable}
@@ -90,7 +98,7 @@ $ ./main randFunds
 ```
 
 ```bash
-$ ./main randClients
+$ ./main --randClients
 2024/05/21 03:53:26 👍 connected to db server successfully.
 2024/05/21 03:53:26 📀 generating random Clients ...
 2024/05/21 03:53:26 👍 -> {Id:81 DOB:2024-05-21 03:53:26.671764 +0100 BST m=+0.004837732 Name:Mr. I. Spark NI:KB617936J}
@@ -154,7 +162,7 @@ $ curl -s 127.0.0.1:8080/fund/11 | jq
 - POST /client/{id}/portfolio
 
 ```bash
-$ curl -v 127.0.0.1:8080/client/23/portfolio -d '{"fund":11,"amount":25000}'
+$ curl -i 127.0.0.1:8080/client/23/portfolio -d '{"fund":11,"amount":25000}'
 HTTP/1.1 201 Created
 X-Re-Exp: 34
 Date: Tue, 21 May 2024 03:53:56 GMT
@@ -165,7 +173,7 @@ Content-Length: 0
 *trying the same POST will be a "**Bad Request**" since the portfolio is already in place for the client:*
 
 ```bash
-$ curl -v 127.0.0.1:8080/client/23/portfolio -d '{"fund":11,"amount":25000}'
+$ curl -i 127.0.0.1:8080/client/23/portfolio -d '{"fund":11,"amount":25000}'
 HTTP/1.1 400 Bad Request
 X-Re-Exp: 35
 Date: Tue, 21 May 2024 03:51:32 GMT

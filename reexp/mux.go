@@ -70,7 +70,11 @@ func AppEPoints(m *http.ServeMux) http.Handler {
 
 	m.HandleFunc("GET /fund", func(w RWr, r *RQ) { lsFunds(w) })
 
-	m.HandleFunc("GET /client", func(w RWr, r *RQ) { lsClients(w) })
+	m.HandleFunc("GET /client", func(w RWr, r *RQ) {
+		if err := lsClients(w); err != nil {
+			w.WriteHeader(http.StatusServiceUnavailable)
+		}
+	})
 
 	m.HandleFunc("GET /client/{id}/portfolio", func(w RWr, r *RQ) {
 		clientId, err := strconv.Atoi(r.PathValue("id"))
