@@ -68,11 +68,11 @@ func main() {
 		log.Print("👍 done.")
 	}
 
-	h := http.DefaultServeMux
-	h.HandleFunc("GET /alive", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "{%q: 0}", "status") })
+	m := http.DefaultServeMux
+	m.HandleFunc("GET /alive", func(w http.ResponseWriter, r *http.Request) { fmt.Fprintf(w, "{%q: 0}", "status") })
 
 	log.Printf("📀 starting on %d ...", port)
-	if err := http.ListenAndServe(":"+strconv.Itoa(port), reexp.AppEPoints(h)); err != nil {
+	if err := http.ListenAndServe(":"+strconv.Itoa(port), reexp.AppEPoints(m)); err != nil {
 		panic(err)
 	}
 }

@@ -31,14 +31,14 @@
 
 ## Limits
 
-- 4 billion records per table: Client, Portfolio
-  - id can be updated to be BIGINT (64bit) from INT (unsigned), however there can only be 17,576,000,000 NI numbers
+- 4 Billion records per table: `Client`, `Portfolio`
+  - Id can be updated to be `BIGINT` (64bit) instead of `INT` (unsigned), however there can only be 17,576,000,000 NI numbers
 - The status code is not logged on the server console.
+- With/without reflection in DB context the order of fields in objects and tables matters (for writing less code that is, which can be abstracted away in a "DBO" kind of arrangement). Here, the order is: `Id` (primary key) field + alphabetical list of other fields.
 
 ## External Dependency
 
 - MySQL driver :: github.com/go-sql-driver/mysql
-  - (indirect) filippo.io/edwards25519
 - Postgres driver :: github.com/lib/pq
 
 ## Web API: EndPoints

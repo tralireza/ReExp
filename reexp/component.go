@@ -108,14 +108,15 @@ func NewPortfolio(rNew RNewPortfolio) error {
 		rNew.Name = client.Name + " :: " + fund.Name
 	}
 	var portfolioId int64
+	inQry := "INSERT INTO portfolio(amount,state,name) VALUES(?,0,?)"
 	if isPg {
-		err := tx.QueryRow("INSERT INTO portfolio(amount,state,name) VALUES($1,0,$2) RETURNING id", rNew.Amount, rNew.Name).Scan(&portfolioId)
+		err := tx.QueryRow(pgMarker(inQry)+" RETURNING id", rNew.Amount, rNew.Name).Scan(&portfolioId)
 		if err != nil {
 			tx.Rollback()
 			return err
 		}
 	} else {
-		r, err := tx.Exec("INSERT INTO portfolio(amount,state,name) VALUES(?,0,?)", rNew.Amount, rNew.Name)
+		r, err := tx.Exec(inQry, rNew.Amount, rNew.Name)
 		if err != nil {
 			tx.Rollback()
 			return err

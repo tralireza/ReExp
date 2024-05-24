@@ -20,11 +20,10 @@ func init() {
 func TestNewPortfolioMy(t *testing.T) {
 	params := map[string]string{}
 	params["parseTime"] = "true"
-	db, err := sql.Open("mysql", (&mysql.Config{Params: params, User: "reexp", Passwd: "mysql", DBName: "reexp"}).FormatDSN())
-	if err != nil {
-		t.Fail()
+	db, _ := sql.Open("mysql", (&mysql.Config{Params: params, User: "reexp", Passwd: "mysql", DBName: "reexp"}).FormatDSN())
+	if err := db.Ping(); err != nil {
+		t.Fatal(err)
 	}
-	defer db.Close()
 
 	mkr := fmt.Sprintf("%06d", rand.Intn(1000000))
 	var clientId, fundId int64
