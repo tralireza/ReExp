@@ -28,6 +28,7 @@
 - Funds in the existing system are all available to Retail clients...
   - an Opt-Out type filter can be deployed to filter all funds not available here if need be.
 - HTTP traffic is not encrypted and need not be for this demo. TLS, however can easily be in place by tweaking few lines of Main/CLI context.
+- Sequential Ids: for security reasons Ids must not be sequential. One-way hashing after Ids are generated could mitigate the risk.
 
 ## Limits
 
