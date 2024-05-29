@@ -45,12 +45,12 @@
 
 Input/Output format (ie: "Content-Type") is JSON.
 
-- GET /client :: list of all clients (no limits)
-  - GET /client/{id} :: details for Client
-  - GET /client/{id}/portfolio :: existing Portfolio for the client if any (only one or none)
-  - POST /client/{id}/portfolio :: POST {"fund":\<id:int\>,"amount":\<amount:int\>[,"name":"\<name:string\>"]} :: will create an entry for the client of the fund with the amount provided. Name of portfolio if provided is used otherwise defaults to: "Client.Name :: Fund.Name".
-- GET /fund :: list of all funds (no limits)
-  - GET /fund/{id} :: details for Fund
+- **GET /client** :: list of all clients (no limits)
+  - **GET /client/{id}** :: details for Client
+  - **GET /client/{id}/portfolio** :: existing Portfolio for the client if any (only one or none)
+  - ***POST /client/{id}/portfolio*** :: POST `{"fund":<id:int>,"amount":<amount:int>[,"name":"<name:string>"]}` :: will create an entry for the client of the fund with the amount provided. Name of portfolio if provided is used otherwise defaults to: "Client.Name :: Fund.Name".
+- **GET /fund** :: list of all funds (no limits)
+  - **GET /fund/{id}** :: details for Fund
 
 ## Database
 
@@ -81,8 +81,8 @@ Usage of ./main:
 
 *Also there are two commands:*
 
-- "**randFunds**"
-- "**randClients**"
+- **randFunds**
+- **randClients**
 
 They could generate dummy data as follows if need be:
 
@@ -115,7 +115,7 @@ Assuming the server is running on port 8080:
 - GET /client
 
 ```bash
-$ curl -s 127.0.0.1:8080/client | jq
+$ curl -s 127.0.0.1:8080/client
 [
   {
     "id": 99,
@@ -138,7 +138,7 @@ $ curl -s 127.0.0.1:8080/client | jq
 - GET /client/{id}
 
 ```bash
-$ curl -s 127.0.0.1:8080/client/23 | jq
+$ curl -s 127.0.0.1:8080/client/23
 {
   "id": 23,
   "dob": "2024-05-21T00:00:00Z",
@@ -150,7 +150,7 @@ $ curl -s 127.0.0.1:8080/client/23 | jq
 - GET /fund/{id}
 
 ```bash
-$ curl -s 127.0.0.1:8080/fund/11 | jq
+$ curl -s 127.0.0.1:8080/fund/11
 {
   "id": 11,
   "name": "Dynamic",
